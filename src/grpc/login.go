@@ -2,6 +2,7 @@ package grpc_login_server
 
 import (
 	"context"
+	"errors"
 
 	"github.com/opentibiabr/login-server/src/api/models"
 	"github.com/opentibiabr/login-server/src/configs"
@@ -12,6 +13,7 @@ import (
 )
 
 const DefaultLoginErrorCode = 3
+const temporaryLoginErrorMessage = "Internal error. Please try again later or contact customer support if the problem persists."
 
 func (ls *GrpcServer) Login(ctx context.Context, in *login_proto_messages.LoginRequest) (*login_proto_messages.LoginResponse, error) {
 	acc, err := database.LoadAccount(in.Email, in.Password, ls.DB)
@@ -30,12 +32,26 @@ func (ls *GrpcServer) Login(ctx context.Context, in *login_proto_messages.LoginR
 		return nil, err
 	}
 
+	sessionKey, err := acc.CreateSession(ctx, ls.DB)
+	if err != nil {
+		logger.Error(err)
+		if errors.Is(err, database.ErrAccountSessionStorageUnavailable) {
+			return &login_proto_messages.LoginResponse{
+				Error: &login_proto_messages.Error{
+					Code:    DefaultLoginErrorCode,
+					Message: temporaryLoginErrorMessage,
+				},
+			}, nil
+		}
+		return nil, err
+	}
+
 	res := login_proto_messages.LoginResponse{
 		PlayData: &login_proto_messages.PlayData{
 			Characters: characters,
 			Worlds:     models.BuildWorldsMessage(configs.GetGameServerConfigs()),
 		},
-		Session: acc.GetGrpcSession(),
+		Session: acc.GetGrpcSession(sessionKey),
 	}
 
 	logger.WithFields(logrus.Fields{

@@ -13,7 +13,7 @@
 
 OpenTibiaBR - Login Server is a free open source login server developed in golang to enable cipclient and [otclient](https://github.com/opentibiabr/otclient) to connect and login to [canary server](https://github.com/opentibiabr/canary).
 
-Current version supports only http login, through `/login` or `/login.php` routes.
+Current version supports only http login, through `/`, `/login`, or `/login.php` routes.
 
 The project is fully covered by tests and supports multi-platform build.
 Every release is available with multi-platform applications for download.
@@ -51,12 +51,12 @@ You can also download our docker image and apply the environment variables to yo
 |`RATE_LIMITER_RATE`  | `rate limit request per sec per user`|
 |`SERVER_IP`          | `game server IP address`             |
 |`SERVER_LOCATION`    | `game server location`               |
-|`SERVER_NAME`        | `game server name`                   |
+|`SERVER_NAME`        | `game server name; the official client sends this exact value plus newline before the first world-login packet` |
 |`SERVER_PORT`        | `game server game port`              |
 |`VOCATIONS`          | `game vocation list csv (a,b,c)`     |
 
 **Tests**  
-`go test ./tests -v`
+`go test ./...`
 
 **Build**  
 `RUN go build -o TARGET_NAME ./src/`

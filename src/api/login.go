@@ -10,6 +10,9 @@ import (
 	"github.com/opentibiabr/login-server/src/grpc/login_proto_messages"
 )
 
+const temporaryErrorCode = 2
+const temporaryErrorMessage = "Internal error. Please try again later or contact customer support if the problem persists."
+
 func (_api *Api) login(c *gin.Context) {
 	var payload models.RequestPayload
 	if err := c.ShouldBindJSON(&payload); err != nil {
@@ -18,8 +21,10 @@ func (_api *Api) login(c *gin.Context) {
 	}
 
 	switch payload.Type {
+	case "cacheinfo", "news", "newsviewed":
+		c.JSON(http.StatusOK, buildTemporaryErrorPayload())
 	case "eventschedule":
-		database.HandleEventSchedule(c, _api.CorePath+"json/eventscheduler/events.json")
+		database.HandleEventSchedule(c, _api.eventSchedulePath())
 	case "boostedcreature":
 		database.HandleBoostedCreature(c, _api.DB, &_api.BoostedCreatureID, &_api.BoostedBossID)
 	case "login":
@@ -40,14 +45,16 @@ func (_api *Api) login(c *gin.Context) {
 			return
 		}
 
-		c.JSON(http.StatusOK, buildPayloadFromMessage(res))
+		c.JSON(http.StatusOK, buildPayloadFromMessage(res, payload))
 	default:
 		c.JSON(http.StatusNotImplemented, gin.H{"status": "not implemented"})
 	}
 }
 
-func buildPayloadFromMessage(msg *login_proto_messages.LoginResponse) models.ResponsePayload {
+func buildPayloadFromMessage(msg *login_proto_messages.LoginResponse, request models.RequestPayload) models.ResponsePayload {
 	return models.ResponsePayload{
+		DeviceCookie: request.DeviceCookie,
+		LoginEmail:   request.Email,
 		PlayData: models.PlayData{
 			Worlds:     models.LoadWorldsFromMessage(msg.PlayData.Worlds),
 			Characters: models.LoadCharactersFromMessage(msg.PlayData.Characters),
@@ -60,5 +67,12 @@ func buildErrorPayloadFromMessage(msg *login_proto_messages.LoginResponse) model
 	return models.LoginErrorPayload{
 		ErrorCode:    int(msg.Error.Code),
 		ErrorMessage: msg.Error.Message,
+	}
+}
+
+func buildTemporaryErrorPayload() models.LoginErrorPayload {
+	return models.LoginErrorPayload{
+		ErrorCode:    temporaryErrorCode,
+		ErrorMessage: temporaryErrorMessage,
 	}
 }

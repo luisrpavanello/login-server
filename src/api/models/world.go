@@ -8,26 +8,25 @@ import (
 type World struct {
 	ID                         uint32 `json:"id" proto:"Id"`
 	Name                       string `json:"name"`
-	ExternalAddress            string `json:"externaladdress"`
 	ExternalAddressProtected   string `json:"externaladdressprotected"`
 	ExternalAddressUnprotected string `json:"externaladdressunprotected"`
-	ExternalPort               uint32 `json:"externalport"`
 	ExternalPortProtected      uint32 `json:"externalportprotected"`
 	ExternalPortUnprotected    uint32 `json:"externalportunprotected"`
 	Location                   string `json:"location"`
 	AntiCheatProtection        bool   `json:"anticheatprotection"`
-	CurrentTournamentPhase     uint32 `json:"currenttournamentphase"`
-	IsTournamentWorld          bool   `json:"istournamentworld"`
 	PreviewState               uint32 `json:"previewstate"`
 	PvpType                    uint32 `json:"pvptype"`
-	RestrictedStore            bool   `json:"restrictedstore"`
 }
+
+const defaultAntiCheatProtection = false
 
 func LoadWorldsFromMessage(worldsMsg []*login_proto_messages.World) []World {
 	var worlds []World
 
 	for _, worldMsg := range worldsMsg {
-		worlds = append(worlds, *FromProtoConvertor(worldMsg, &World{}).(*World))
+		world := *FromProtoConvertor(worldMsg, &World{}).(*World)
+		world.AntiCheatProtection = defaultAntiCheatProtection
+		worlds = append(worlds, world)
 	}
 
 	return worlds

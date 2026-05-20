@@ -71,6 +71,8 @@ func parseDateString(dateStr string) int {
 		"2006-01-02",
 		"02/01/2006",
 		"2/1/2006",
+		"01/02/2006",
+		"1/2/2006",
 	}
 
 	var t time.Time
