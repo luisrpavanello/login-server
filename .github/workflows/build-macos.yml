@@ -2,30 +2,29 @@
 name: Build - MacOS
 
 on:
-  pull_request:
-  push:
-    branches:
-      - main
-      - master
+  workflow_call:
 
 jobs:
   job:
-    name: ${{ matrix.os }}-${{ matrix.go-version }}
-    runs-on: ${{ matrix.os }}
+    name: macos-15
+    runs-on: macos-15
     strategy:
       fail-fast: false
-      matrix:
-        os: [macos-15]
-        go-version: [1.16.x]
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6
         with:
-          go-version: stable
+          go-version: "1.25.x"
 
       - name: Build Login Server
         run: go build -o login-server ./src/
+
+      - name: Smoke test Login Server
+        shell: pwsh
+        run: ./.github/scripts/smoke-test.ps1 -BinaryPath ./login-server
