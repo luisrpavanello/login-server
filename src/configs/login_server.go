@@ -2,6 +2,7 @@ package configs
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/sirupsen/logrus"
 	"golang.org/x/time/rate"
@@ -98,9 +99,18 @@ func GetRateLimiterConfigs() RateLimiter {
 }
 
 const EnvLogLevel = "ENV_LOG_LEVEL"
+const EnvLogFile = "ENV_LOG_FILE"
 
 func GetLogLevel() logrus.Level {
 	defaultLevel, _ := logrus.Level.MarshalText(logrus.InfoLevel)
 	level, _ := logrus.ParseLevel(GetEnvStr(EnvLogLevel, string(defaultLevel)))
 	return level
+}
+
+func GetLogFile() string {
+	if value, exists := os.LookupEnv(EnvLogFile); exists {
+		return value
+	}
+
+	return "logs/login-server.txt"
 }
