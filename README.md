@@ -1,123 +1,153 @@
-# OpenTibiaBR - Login Server
+# OpenTibiaBR Login Server
 
-[![Version](https://img.shields.io/github/v/release/opentibiabr/login-server)](https://github.com/opentibiabr/login-server/releases/latest)
-[![Go](https://img.shields.io/github/go-mod/go-version/opentibiabr/login-server)](https://golang.org/doc/go1.16)
-![GitHub repo size](https://img.shields.io/github/repo-size/opentibiabr/login-server)
+Login Server e o servico HTTP/gRPC responsavel por autenticar o client e entregar a lista de mundos/personagens para conexao ao Canary. Ele foi escrito em Go e deve usar o mesmo banco de dados do servidor.
 
-[![Discord Channel](https://img.shields.io/discord/528117503952551936.svg?style=flat-square&logo=discord)](https://discord.gg/3NxYnyV)
-[![GitHub pull request](https://img.shields.io/github/issues-pr/opentibiabr/login-server)](https://github.com/opentibiabr/login-server/pulls)
-[![GitHub issues](https://img.shields.io/github/issues/opentibiabr/login-server)](https://github.com/opentibiabr/login-server/issues)
+Rotas HTTP suportadas:
 
+- `/`
+- `/login`
+- `/login.php`
 
-## Project
+## Estrutura Importante
 
-OpenTibiaBR - Login Server is a free open source login server developed in golang to enable cipclient and [otclient](https://github.com/opentibiabr/otclient) to connect and login to [canary server](https://github.com/opentibiabr/canary).
+| Caminho | Descricao |
+| --- | --- |
+| `login-server` | Binario local ja compilado. |
+| `.env.example` | Modelo de variaveis de ambiente. |
+| `.env` | Configuracao local usada em ambiente de desenvolvimento. |
+| `src/` | Codigo-fonte Go. |
+| `docker/` | Dockerfile e compose para execucao em container. |
+| `logs/` | Saida padrao de logs quando `ENV_LOG_FILE` estiver configurado. |
 
-Current version supports only http login, through `/`, `/login`, or `/login.php` routes.
+## Requisitos
 
-The project is fully covered by tests and supports multi-platform build.
-Every release is available with multi-platform applications for download.
+Para executar o binario:
 
-## Builds
-| Platform       | Build        |
-| :------------- | :----------: |
-| MacOS          | [![MacOS Build](https://github.com/opentibiabr/login-server/actions/workflows/ci-build-macos.yml/badge.svg?branch=main)](https://github.com/opentibiabr/login-server/actions/workflows/ci-build-macos.yml)   |
-| Ubuntu         | [![Ubuntu Build](https://github.com/opentibiabr/login-server/actions/workflows/ci-build-ubuntu.yml/badge.svg?branch=main)](https://github.com/opentibiabr/login-server/actions/workflows/ci-build-ubuntu.yml) |
-| Windows        | [![Windows Build](https://github.com/opentibiabr/login-server/actions/workflows/ci-build-windows.yml/badge.svg?branch=main)](https://github.com/opentibiabr/login-server/actions/workflows/ci-build-windows.yml) |
+- MySQL/MariaDB com o schema do Canary.
+- Variaveis de ambiente configuradas em `.env`.
 
-[![Workflow](https://github.com/opentibiabr/login-server/actions/workflows/ci-multiplat-release.yml/badge.svg)](https://github.com/opentibiabr/login-server/actions/workflows/ci-multiplat-release.yml)
+Para desenvolver ou recompilar:
 
-### Getting **Started**
+- Go compativel com o `go.mod`.
+- Acesso ao banco de dados usado pelo Canary.
 
-To run it, simply download the latest release and define your environment variables.
-You can set environment type as `dev` if you want to use a `.env` file (store it in the same folder of the login server).
+## Configuracao
 
-You can also download our docker image and apply the environment variables to your container.
+Crie o arquivo `.env` a partir do modelo:
 
-**Enviroment Variables**
+```bash
+cp .env.example .env
+```
 
-|       NAME          |            HOW TO USE                |
-| :------------------ | :----------------------------------  |
-|`MYSQL_DBNAME`       | `database default database name`     |
-|`MYSQL_HOST`         | `database host`                      |
-|`MYSQL_PORT`         | `database port`                      |
-|`MYSQL_PASS`         | `database password`                  |
-|`MYSQL_USER`         | `database username`                  |
-|`ENV_LOG_LEVEL`      | `logrus log level for verbose` [ref](https://pkg.go.dev/github.com/sirupsen/logrus#Level)   |
-|`ENV_LOG_FILE`       | `optional log file path, defaults to logs/login-server.txt` |
-|`LOGIN_IP`           | `login ip address`                   |
-|`LOGIN_HTTP_PORT`    | `login http port`                    |
-|`LOGIN_GRPC_PORT`    | `login grpc port`                    |
-|`RATE_LIMITER_BURST` | `rate limiter same request burst`    |
-|`RATE_LIMITER_RATE`  | `rate limit request per sec per user`|
-|`SERVER_IP`          | `game server IP address`             |
-|`SERVER_LOCATION`    | `game server location`               |
-|`SERVER_NAME`        | `game server name; the official client sends this exact value plus newline before the first world-login packet` |
-|`SERVER_PORT`        | `game server game port`              |
-|`VOCATIONS`          | `game vocation list csv (a,b,c)`     |
+Edite os valores principais:
 
-**Tests**  
-`go test ./...`
+```env
+SERVER_PATH=/Users/luispavanello/Dev/ProjectOT/canary
 
-**Build**  
-`RUN go build -o TARGET_NAME ./src/`
+MYSQL_DBNAME=canary_db
+MYSQL_HOST=127.0.0.1
+MYSQL_PORT=3306
+MYSQL_USER=canary
+MYSQL_PASS=canary123
+
+LOGIN_IP=127.0.0.1
+LOGIN_HTTP_PORT=8088
+LOGIN_GRPC_PORT=9090
+
+SERVER_IP=127.0.0.1
+SERVER_NAME=OTServBR-Global
+SERVER_PORT=7172
+SERVER_LOCATION=BRA
+```
+
+Campos importantes:
+
+| Variavel | Uso |
+| --- | --- |
+| `MYSQL_*` | Credenciais do banco compartilhado com o Canary. |
+| `LOGIN_HTTP_PORT` | Porta HTTP usada pelo OTClient para login web. |
+| `LOGIN_GRPC_PORT` | Porta interna gRPC. |
+| `SERVER_IP` | IP enviado ao client para conectar no mundo. |
+| `SERVER_PORT` | Porta do game server, normalmente `7172`. |
+| `SERVER_NAME` | Nome do mundo exibido/retornado no login. |
+| `RATE_LIMITER_RATE` e `RATE_LIMITER_BURST` | Controle de requisicoes por usuario/IP. |
+
+## Como Iniciar
+
+Na raiz deste diretorio:
+
+```bash
+chmod +x ./login-server
+./login-server
+```
+
+Com a configuracao acima, o endpoint local fica em:
+
+```text
+http://127.0.0.1:8088/login
+```
+
+O OTClient deste workspace ja possui uma entrada local em `init.lua` apontando para `127.0.0.1` na porta `8088`.
+
+## Executar pelo Codigo-Fonte
+
+```bash
+go run ./src
+```
+
+## Build
+
+```bash
+go build -o login-server ./src
+```
+
+## Testes
+
+```bash
+go test ./...
+```
 
 ## Docker
-`docker pull opentibiabr/login-server:latest`<br><br>
-[![Automation](https://img.shields.io/docker/cloud/automated/opentibiabr/login-server)](https://hub.docker.com/r/opentibiabr/login-server)
-[![Image Size](https://img.shields.io/docker/image-size/opentibiabr/login-server)](https://hub.docker.com/r/opentibiabr/login-server/tags?page=1&ordering=last_updated)
-![Pulls](https://img.shields.io/docker/pulls/opentibiabr/login-server)
-[![Build](https://img.shields.io/docker/cloud/build/opentibiabr/login-server)](https://hub.docker.com/r/opentibiabr/login-server/builds)
 
-## Benchmark
-There are a few known login versions available. The most common ones are a python login and login.php, from different websites versions.
-We've performed a benchmark (code available in benchmark_test.go) where 1k valid requests were performed to the server, locally.
-As you can see in the results below, we got up to 10x faster without decreasing the server availability (99.5% is still pretty good in any global standard).
+Para construir e iniciar pelo compose do projeto:
 
-![image](https://user-images.githubusercontent.com/34237492/118380499-7da2f500-b5e2-11eb-9025-eda180d501df.png)
+```bash
+cd docker
+docker compose up -d --build
+```
 
-Also, we performed a benchmark in google cloud, using cloud run and cloud sql database, both with lower possible specifications.
-As you can see, we kept an average of 700 requests/s and a good availability, even if with the latency between my computed and cloud services being accounted in this graph.
+O compose local expoe:
 
-![image](https://user-images.githubusercontent.com/34237492/118379403-64964600-b5da-11eb-9e11-25c92024986d.png)
+| Porta | Uso |
+| --- | --- |
+| `80` | HTTP login. |
+| `9090` | gRPC. |
 
-Another great aspect is that, comparing with the python login, our docker image is almost 10x smaller (15Mb). 
+Tambem existe imagem publica:
 
-## gRPC
-From version 2.0.0 on, we start using gRPC protocol. 
-The HTTP runs on top of the gRPC layer, using a reversed proxy. That lead to a small gain in the availability without any performance loss.
+```bash
+docker pull opentibiabr/login-server:latest
+```
 
-In the gRPC server we got a 10x performance boost, compared to the HTTP benchmarks:
+## Integracao com Canary e OTClient
 
-![image](https://user-images.githubusercontent.com/34237492/118568814-e45a1700-b778-11eb-8b79-ddc26dde487c.png)
+Fluxo recomendado:
 
-## Issues
+1. Inicie o banco e o Canary.
+2. Confirme que o Canary esta aceitando conexoes na porta `7172`.
+3. Configure o `login-server` com o mesmo banco.
+4. Inicie `./login-server`.
+5. No OTClient, use o host `127.0.0.1` e a porta HTTP configurada, por exemplo `8088`.
 
-We use the [issue tracker on GitHub](https://github.com/opentibiabr/login-server/issues). Everyone who is watching the repository gets notified by e-mail when there is an activity, so be mindful about comments that add no value (e.g. "+1"). 
+## Solucao de Problemas
 
-We are willing to improve the login server with more features, so feel free to create issues with features requests and ideas, only bug fixes.
+| Problema | Verificacao |
+| --- | --- |
+| Login retorna erro de banco | Confira `MYSQL_HOST`, `MYSQL_DBNAME`, usuario, senha e permissoes. |
+| Client autentica mas nao entra no mundo | Confira `SERVER_IP`, `SERVER_PORT` e se o Canary esta online. |
+| Porta ocupada | Altere `LOGIN_HTTP_PORT` ou finalize o processo usando a porta. |
+| `.env` nao carregado | Execute o binario a partir da raiz do diretorio `login-server`. |
 
-If you'd need an issue/feature to be prioritized, you should either do it yourself and submit a pull request, or place a bounty.
+## Licenca
 
-## Pull requests
-
-Before [creating a pull request](https://github.com/opentibiabr/login-server/pulls) please keep in mind:
-
-* Set one single scope in your pull request. Focus help us review and things to ship faster. Too many things on the same Pull Request make it harder to review, harder to test and hard to move on.
-* Add tests. Pull Requests without tests **won't** be approved.
-* Your code must follow go [standard golang format patterns](https://golang.org/doc/effective_go#formatting).
-* There are people that doesn't play the game on the official server, so explain your changes to help understand what are you changing and why.
-* Avoid opening a Pull Request to just update minor typo or comments. Try attaching those to other PRs with meaningful content.
-
-## Special Thanks
-
-* our partners
-* our crew (majesty, gpedro, eduardo dantas, foot, lucas)
-
-## **Sponsors**
-
-If you want to sponsor here, join on discord and send a message for one of our administrators.
-
-## Partners
-
-[![Supported by OTServ Brasil](https://raw.githubusercontent.com/otbr/otserv-brasil/main/otbr.png)](https://forums.otserv.com.br)
+Consulte `LICENSE` para detalhes de licenciamento.
