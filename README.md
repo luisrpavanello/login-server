@@ -44,13 +44,13 @@ Edite os valores principais:
 ```env
 SERVER_PATH=/Users/luispavanello/Dev/ProjectOT/canary
 
-MYSQL_DBNAME=canary_db
+MYSQL_DBNAME=canary
 MYSQL_HOST=127.0.0.1
-MYSQL_PORT=3306
+MYSQL_PORT=3307
 MYSQL_USER=canary
-MYSQL_PASS=canary123
+MYSQL_PASS=canary
 
-LOGIN_IP=127.0.0.1
+LOGIN_IP=0.0.0.0
 LOGIN_HTTP_PORT=8088
 LOGIN_GRPC_PORT=9090
 
@@ -64,7 +64,9 @@ Campos importantes:
 
 | Variavel | Uso |
 | --- | --- |
+| `SERVER_PATH` | Pasta local do Canary; usada para ler `config.lua` e alinhar `authType`. |
 | `MYSQL_*` | Credenciais do banco compartilhado com o Canary. |
+| `LOGIN_IP` | IP de bind do HTTP/gRPC; use `0.0.0.0` para Docker/publicacao de porta. |
 | `LOGIN_HTTP_PORT` | Porta HTTP usada pelo OTClient para login web. |
 | `LOGIN_GRPC_PORT` | Porta interna gRPC. |
 | `SERVER_IP` | IP enviado ao client para conectar no mundo. |
@@ -120,7 +122,7 @@ O compose local expoe:
 
 | Porta | Uso |
 | --- | --- |
-| `80` | HTTP login. |
+| `8088` | HTTP login. |
 | `9090` | gRPC. |
 
 Tambem existe imagem publica:
