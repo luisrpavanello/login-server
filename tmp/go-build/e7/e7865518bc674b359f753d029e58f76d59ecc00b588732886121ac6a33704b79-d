@@ -1,0 +1,14 @@
+# test log
+getenv GOTMPDIR
+getenv TMPDIR
+open /var/folders/r_/qj203n5n4x73201jgjwbp4kh0000gn/T/Test_authTypeIsPassword4225472324/001/config.lua
+open /var/folders/r_/qj203n5n4x73201jgjwbp4kh0000gn/T/Test_authTypeIsPassword4225472324/001/config.lua
+open /var/folders/r_/qj203n5n4x73201jgjwbp4kh0000gn/T
+getenv GOTMPDIR
+getenv TMPDIR
+open /var/folders/r_/qj203n5n4x73201jgjwbp4kh0000gn/T/Test_loginHandlerReturnsSessionFlowVariantspassword_auth_rewrit1820690317/001/config.lua
+open /var/folders/r_/qj203n5n4x73201jgjwbp4kh0000gn/T/Test_loginHandlerReturnsSessionFlowVariantspassword_auth_rewrit1820690317/001/config.lua
+open /var/folders/r_/qj203n5n4x73201jgjwbp4kh0000gn/T
+getenv GOTMPDIR
+getenv TMPDIR
+open /var/folders/r_/qj203n5n4x73201jgjwbp4kh0000gn/T

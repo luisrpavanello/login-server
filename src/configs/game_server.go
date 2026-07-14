@@ -12,7 +12,7 @@ const EnvServerLocationKey = "SERVER_LOCATION"
 const EnvServerNameKey = "SERVER_NAME"
 const EnvServerPortKey = "SERVER_PORT"
 const EnvServerPathKey = "SERVER_PATH"
-const DefaultServerName = "OTServBR-Global"
+const DefaultServerName = "Numenor"
 
 const (
 	ConfigErrorCodeUnknown              = 1000

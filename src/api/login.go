@@ -24,7 +24,9 @@ func (_api *Api) login(c *gin.Context) {
 	}
 
 	switch payload.Type {
-	case "cacheinfo", "news", "newsviewed":
+	case "cacheinfo":
+		database.HandleCacheInfo(c, _api.DB)
+	case "news", "newsviewed":
 		c.JSON(http.StatusOK, buildTemporaryErrorPayload())
 	case "eventschedule":
 		database.HandleEventSchedule(c, _api.eventSchedulePath())

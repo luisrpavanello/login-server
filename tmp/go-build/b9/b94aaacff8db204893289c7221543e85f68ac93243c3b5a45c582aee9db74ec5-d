@@ -1,0 +1,8 @@
+./api.go
+./crash_report.go
+./login.go
+./paths.go
+./api_test.go
+./crash_report_test.go
+./login_test.go
+./paths_test.go

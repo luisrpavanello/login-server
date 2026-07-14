@@ -15,6 +15,23 @@ import (
 	"github.com/opentibiabr/login-server/src/serviceerrors"
 )
 
+type boostedOutfit struct {
+	Type   uint32 `json:"type"`
+	Head   uint8  `json:"head"`
+	Body   uint8  `json:"body"`
+	Legs   uint8  `json:"legs"`
+	Feet   uint8  `json:"feet"`
+	Addons uint8  `json:"addons"`
+	Mount  uint32 `json:"mount"`
+}
+
+type boostedVisualData struct {
+	CreatureName   string
+	CreatureOutfit boostedOutfit
+	BossName       string
+	BossOutfit     boostedOutfit
+}
+
 func loadBoostedCreatureData(db *sql.DB) (uint32, uint32, error) {
 	if db == nil {
 		return 0, 0, errors.New("database connection is nil")
@@ -38,6 +55,47 @@ func loadBoostedCreatureData(db *sql.DB) (uint32, uint32, error) {
 	}
 
 	return creatureRaceID, bossRaceID, nil
+}
+
+func loadBoostedVisualData(db *sql.DB) (boostedVisualData, error) {
+	if db == nil {
+		return boostedVisualData{}, errors.New("database connection is nil")
+	}
+
+	var data boostedVisualData
+	query := "SELECT boostname, looktype, lookhead, lookbody, looklegs, lookfeet, lookaddons, lookmount FROM boosted_creature LIMIT 1"
+	err := db.QueryRow(query).Scan(
+		&data.CreatureName,
+		&data.CreatureOutfit.Type,
+		&data.CreatureOutfit.Head,
+		&data.CreatureOutfit.Body,
+		&data.CreatureOutfit.Legs,
+		&data.CreatureOutfit.Feet,
+		&data.CreatureOutfit.Addons,
+		&data.CreatureOutfit.Mount,
+	)
+	if err != nil {
+		logger.Debug(fmt.Sprintf("Failed to load boosted creature visual data: %s", err.Error()))
+		return boostedVisualData{}, err
+	}
+
+	query = "SELECT boostname, looktype, lookhead, lookbody, looklegs, lookfeet, lookaddons, lookmount FROM boosted_boss LIMIT 1"
+	err = db.QueryRow(query).Scan(
+		&data.BossName,
+		&data.BossOutfit.Type,
+		&data.BossOutfit.Head,
+		&data.BossOutfit.Body,
+		&data.BossOutfit.Legs,
+		&data.BossOutfit.Feet,
+		&data.BossOutfit.Addons,
+		&data.BossOutfit.Mount,
+	)
+	if err != nil {
+		logger.Debug(fmt.Sprintf("Failed to load boosted boss visual data: %s", err.Error()))
+		return boostedVisualData{}, err
+	}
+
+	return data, nil
 }
 
 func checkAndUpdateBoostedCreatureData(db *sql.DB, creatureRaceID *uint32, bossRaceID *uint32) error {
@@ -70,9 +128,23 @@ func HandleBoostedCreature(c *gin.Context, db *sql.DB, creatureRaceID *uint32, b
 		return
 	}
 
+	visualData, err := loadBoostedVisualData(db)
+	if err != nil {
+		writeServiceError(c, serviceerrors.GameData(
+			serviceerrors.CodeBoostedDataUnavailable,
+			"BOOSTED_DATA_UNAVAILABLE",
+			err,
+		))
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"boostedcreature": true,
-		"creatureraceid":  creatureRaceID,
-		"bossraceid":      bossRaceID,
+		"creatureraceid":  *creatureRaceID,
+		"bossraceid":      *bossRaceID,
+		"creaturename":    visualData.CreatureName,
+		"bossname":        visualData.BossName,
+		"creatureoutfit":  visualData.CreatureOutfit,
+		"bossoutfit":      visualData.BossOutfit,
 	})
 }

@@ -1,0 +1,5 @@
+./character.go
+./payloads.go
+./proto_conversor.go
+./session.go
+./world.go
